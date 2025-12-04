@@ -11,7 +11,7 @@ import (
 )
 
 func TestTaskRepository(t *testing.T) {
-	db := database.InitDB("test.db")
+	db, _ := database.InitDB("test.db")
 	repository := repository.NewSqliteTaskRepository(db)
 	ctx := context.Background()
 	t.Run("create task", func(t *testing.T) {
@@ -25,7 +25,7 @@ func TestTaskRepository(t *testing.T) {
 			t.Error(err)
 		}
 
-		created, err := repository.Get(ctx, id)
+		created, err := repository.GetByID(ctx, id)
 		if err != nil {
 			t.Error(err)
 		}

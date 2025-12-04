@@ -13,7 +13,10 @@ import (
 )
 
 func main() {
-	db := database.InitDB("thermaltodo.db")
+	db, err := database.InitDB("thermaltodo.db")
+	if err != nil {
+		log.Fatal(err)
+	}
 	repository := taskrepository.NewSqliteTaskRepository(db)
 	ctx := context.Background()
 	tasks, err := repository.GetAll(ctx)

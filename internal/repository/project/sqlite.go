@@ -70,7 +70,7 @@ func (r *SqliteProjectRepository) Update(ctx context.Context, project *models.Pr
 	defer cancel()
 
 	if project.ID == 0 {
-		return errors.New("invalid project ID")
+		return errors.New("invalid project id")
 	}
 
 	// Check if project exists first

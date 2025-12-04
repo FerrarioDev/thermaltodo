@@ -8,7 +8,7 @@ import (
 
 type TaskRepository interface {
 	Create(ctx context.Context, task *models.Task) (uint, error)
-	Get(ctx context.Context, id uint) (*models.Task, error)
+	GetByID(ctx context.Context, id uint) (*models.Task, error)
 	GetAll(ctx context.Context) ([]models.Task, error)
 	GetByProject(ctx context.Context, projectID uint) ([]models.Task, error)
 	GetPending(ctx context.Context) ([]models.Task, error)

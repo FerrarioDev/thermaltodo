@@ -2,22 +2,19 @@
 package database
 
 import (
-	"fmt"
-
 	"github.com/FerrarioDev/thermaltodo/internal/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-func InitDB(dsn string) *gorm.DB {
+func InitDB(dsn string) (*gorm.DB, error) {
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	if err != nil {
-		fmt.Printf("failed to connect to database: %v", err)
-		return nil
+		return nil, err
 	}
 	if err := db.AutoMigrate(&models.Project{}, &models.Task{}); err != nil {
-		fmt.Printf("failed to automigrate: %v", err)
+		return nil, err
 	}
 
-	return db
+	return db, nil
 }
