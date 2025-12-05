@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"strings"
 
 	"github.com/FerrarioDev/thermaltodo/internal/models"
 	"github.com/joeyak/go-escpos"
@@ -28,20 +29,10 @@ func NewEscPos(printer *escpos.Printer, buf *BufferCloser) Printer {
 }
 
 func (s *EscPos) Print(ctx context.Context, job *models.PrintJob) error {
-	var priority string
-	switch job.Priority {
-	case "0":
-		priority = "LOW PRIORITY"
-	case "1":
-		priority = "MEDIUM PRIORITY"
-	case "2":
-		priority = "HIGH PRIORITY"
-	}
-
 	createdAt := job.CreatedAt.Format("2006-01-02 15:04:05")
 	receipt := `
 ================================
-  TASK: [%s]
+  TASK: [%d]
 ================================
 
 Title:
@@ -61,17 +52,24 @@ Crumple & toss when complete!
 ================================
 --------------------------------
     `
-	s.printer.Printf(receipt, priority, job.Title, job.Description, job.Project, createdAt)
-	s.printer.FeedLines(4)
+	if err := s.printer.Printf(receipt, job.TaskID, job.Title, job.Description, job.Project, createdAt); err != nil {
+		return fmt.Errorf("failed to print task: %v", err)
+	}
+
+	if err := s.printer.FeedLines(len(strings.Split(receipt, "\n"))); err != nil {
+		return fmt.Errorf("failed to feed lines: %v", err)
+	}
+
 	err := s.printer.Cut()
 	if err != nil {
-		return nil
+		return err
 	}
+
 	cmd := exec.Command("lp", "-o", "raw")
 	cmd.Stdin = s.buf
 	_, err = cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("failed to print %v", err)
+		return fmt.Errorf("failed to execute command: %v", err)
 	}
 	return nil
 }

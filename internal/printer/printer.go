@@ -1,3 +1,4 @@
+// Package printer is the interface for the printer and for the queues
 package printer
 
 import (

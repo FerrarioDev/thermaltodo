@@ -1,3 +1,4 @@
+// Package taskrepository handles all the database operations for the task table
 package taskrepository
 
 import (
@@ -10,7 +11,7 @@ type TaskRepository interface {
 	Create(ctx context.Context, task *models.Task) (uint, error)
 	GetByID(ctx context.Context, id uint) (*models.Task, error)
 	GetAll(ctx context.Context) ([]models.Task, error)
-	GetByProject(ctx context.Context, projectID uint) ([]models.Task, error)
+	// GetByProject(ctx context.Context, projectID uint) ([]models.Task, error)
 	GetPending(ctx context.Context) ([]models.Task, error)
 	GetForPrinting(ctx context.Context) ([]models.Task, error)
 	Update(ctx context.Context, task *models.Task) error

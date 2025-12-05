@@ -18,7 +18,6 @@ func TestTaskRepository(t *testing.T) {
 		task := models.Task{
 			Title:       "test",
 			Description: "this is a test task",
-			Priority:    0,
 		}
 		id, err := repository.Create(ctx, &task)
 		if err != nil {

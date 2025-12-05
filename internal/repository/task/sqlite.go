@@ -27,12 +27,12 @@ func (r *SqliteTaskRepository) Create(ctx context.Context, task *models.Task) (u
 		return 0, errors.New("missing task title")
 	}
 
-	if err := r.db.WithContext(ctx).First(&models.Project{}, task.Project).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return 0, errors.New("project not found")
-		}
-		return 0, err
-	}
+	// if err := r.db.WithContext(ctx).First(&models.Project{}, task.Project).Error; err != nil {
+	//  if errors.Is(err, gorm.ErrRecordNotFound) {
+	//     return 0, errors.New("project not found")
+	//  }
+	//  return 0, err
+	//  }
 
 	if err := r.db.WithContext(ctx).First(&models.Task{}, task.ParentID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -40,6 +40,7 @@ func (r *SqliteTaskRepository) Create(ctx context.Context, task *models.Task) (u
 		}
 		return 0, err
 	}
+
 	result := r.db.WithContext(ctx).Create(task)
 	if result.Error != nil {
 		return 0, result.Error
@@ -70,16 +71,16 @@ func (r *SqliteTaskRepository) GetAll(ctx context.Context) ([]models.Task, error
 	return tasks, nil
 }
 
-func (r *SqliteTaskRepository) GetByProject(ctx context.Context, projectID uint) ([]models.Task, error) {
-	ctx, cancel := context.WithTimeout(ctx, timeout*time.Second)
-	defer cancel()
-	var tasks []models.Task
-	result := r.db.WithContext(ctx).Where("project_id", projectID).Find(&tasks)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return tasks, nil
-}
+// func (r *SqliteTaskRepository) GetByProject(ctx context.Context, projectID uint) ([]models.Task, error) {
+// 	ctx, cancel := context.WithTimeout(ctx, timeout*time.Second)
+// 	defer cancel()
+// 	var tasks []models.Task
+// 	result := r.db.WithContext(ctx).Where("project_id", projectID).Find(&tasks)
+// 	if result.Error != nil {
+// 		return nil, result.Error
+// 	}
+// 	return tasks, nil
+// }
 
 func (r *SqliteTaskRepository) GetPending(ctx context.Context) ([]models.Task, error) {
 	ctx, cancel := context.WithTimeout(ctx, timeout*time.Second)
@@ -162,7 +163,7 @@ func (r *SqliteTaskRepository) MarkComplete(ctx context.Context, id uint) error 
 	}
 
 	now := time.Now()
-	existing.Status = "done"
+	existing.Status = models.Done
 	existing.CompletedAt = &now
 
 	if err := r.db.WithContext(ctx).Save(&existing).Error; err != nil {
