@@ -12,7 +12,7 @@ func InitDB(dsn string) (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := db.AutoMigrate(&models.Project{}, &models.Task{}); err != nil {
+	if err := db.AutoMigrate(&models.Task{}); err != nil {
 		return nil, err
 	}
 

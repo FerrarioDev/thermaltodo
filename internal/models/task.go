@@ -19,7 +19,7 @@ type Task struct {
 	ParentID    *uint  `gorm:"index"`
 	Title       string `gorm:"not null"`
 	Description string
-	Status      Status `gorm:"default:'0'"` // todo, in_progress, done
+	Status      Status `gorm:"default:0"` // todo, in_progress, done
 	Printed     bool   `gorm:"default:false"`
 
 	// Time related
@@ -30,7 +30,36 @@ type Task struct {
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
 
 	// Relationships
-	Project  *Project
 	Parent   *Task
 	Subtasks []Task `gorm:"foreignkey:parentID"`
+}
+
+type UITask struct {
+	id          uint
+	title       string
+	description string
+}
+
+func (t Task) ConvertToUI() UITask {
+	ui := UITask{
+		id:          t.ID,
+		title:       t.Title,
+		description: t.Description,
+	}
+
+	return ui
+}
+
+func (t UITask) FilterValue() string {
+	return t.title // or whatever field you want to use for filtering
+}
+
+// Title is typically used for display
+func (t UITask) Title() string {
+	return t.title
+}
+
+// Description is typically used for display
+func (t UITask) Description() string {
+	return t.description // or any other field
 }
