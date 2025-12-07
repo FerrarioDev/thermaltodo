@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/FerrarioDev/thermaltodo/internal/database"
 	taskrepository "github.com/FerrarioDev/thermaltodo/internal/repository/task"
@@ -16,9 +18,13 @@ func main() {
 	}
 	repository := taskrepository.NewSqliteTaskRepository(db)
 
-	app := ui.NewApp(repository)
+	pages := []tea.Model{ui.NewApp(repository), ui.NewForm(repository)}
+	app := pages[ui.Board]
 
 	p := tea.NewProgram(app)
 
-	p.Run()
+	if _, err := p.Run(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
