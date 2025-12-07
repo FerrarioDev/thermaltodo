@@ -71,6 +71,25 @@ func (r *SqliteTaskRepository) GetAll(ctx context.Context) ([]models.Task, error
 	return tasks, nil
 }
 
+func (r *SqliteTaskRepository) GetByParentID(ctx context.Context, parentID *uint) ([]models.Task, error) {
+	ctx, cancel := context.WithTimeout(ctx, timeout*time.Second)
+	defer cancel()
+
+	var tasks []models.Task
+
+	query := r.db.WithContext(ctx)
+
+	if parentID == nil {
+		query = query.Where("parent_id IS NULL")
+	} else {
+		query = query.Where("parent_id = ?", parentID)
+	}
+
+	err := query.Find(&tasks).Error
+
+	return tasks, err
+}
+
 // func (r *SqliteTaskRepository) GetByProject(ctx context.Context, projectID uint) ([]models.Task, error) {
 // 	ctx, cancel := context.WithTimeout(ctx, timeout*time.Second)
 // 	defer cancel()

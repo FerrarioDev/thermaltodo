@@ -35,14 +35,14 @@ type Task struct {
 }
 
 type UITask struct {
-	id          uint
+	ID          uint
 	title       string
 	description string
 }
 
 func (t Task) ConvertToUI() UITask {
 	ui := UITask{
-		id:          t.ID,
+		ID:          t.ID,
 		title:       t.Title,
 		description: t.Description,
 	}
