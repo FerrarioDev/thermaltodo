@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -51,7 +52,7 @@ func (t Task) ConvertToUI() UITask {
 }
 
 func (t UITask) FilterValue() string {
-	return t.title // or whatever field you want to use for filtering
+	return fmt.Sprint(t.ID)
 }
 
 // Title is typically used for display

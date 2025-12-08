@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type Form struct {
@@ -18,61 +19,81 @@ type Form struct {
 	repo        taskrepository.TaskRepository
 }
 
-func NewForm(repo taskrepository.TaskRepository) *Form {
-	form := &Form{repo: repo}
-	form.title = textinput.New()
+type TaskCreatedMsg struct {
+	Task models.Task
+}
+
+type TaskCancelledMsg struct{}
+
+func NewForm(repo taskrepository.TaskRepository, parentID *uint) *Form {
+	form := &Form{
+		repo:        repo,
+		parentID:    parentID,
+		title:       textinput.New(),
+		description: textarea.New(),
+	}
 	form.title.Focus()
-	form.description = textarea.New()
 	return form
 }
 
 func (m Form) NewTask() tea.Msg {
 	task := models.Task{
 		Title:       m.title.Value(),
-		Description: m.title.Value(),
+		Description: m.description.Value(),
 		ParentID:    m.parentID,
 		Status:      models.Todo,
 	}
 	_, err := m.repo.Create(context.Background(), &task)
 	if err != nil {
-		return fmt.Sprint(err)
+		return fmt.Errorf("failed to create task: %w", err)
 	}
 
-	return task
+	return TaskCreatedMsg{Task: task}
 }
 
 func (m Form) Init() tea.Cmd {
 	return nil
 }
 
-func (m Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
+func (m *Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "q":
-			return m, tea.Quit
-		case "enter":
+		case "ctrl+c", "esc":
+			return m, func() tea.Msg { return TaskCancelledMsg{} }
+		case "tab":
 			if m.title.Focused() {
 				m.title.Blur()
 				m.description.Focus()
 				return m, textarea.Blink
 			} else {
-				pages[TaskForm] = m
-				return pages[Board], m.NewTask
+				m.description.Blur()
+				m.title.Focus()
+				return m, textinput.Blink
 			}
+		case "enter":
+			if m.title.Focused() {
+				m.title.Blur()
+				m.description.Focus()
+				return m, textarea.Blink
+			}
+			return m, func() tea.Msg { return m.NewTask() }
 		}
 	}
+	// Update focused field
+	var cmd tea.Cmd
 	if m.title.Focused() {
 		m.title, cmd = m.title.Update(msg)
 		return m, cmd
-	} else {
-		m.description, cmd = m.description.Update(msg)
 	}
-
+	m.description, cmd = m.description.Update(msg)
 	return m, cmd
 }
 
 func (m Form) View() string {
-	return ""
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		"Create a new task",
+		m.title.View(),
+		m.description.View())
 }

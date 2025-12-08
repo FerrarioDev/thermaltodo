@@ -18,8 +18,7 @@ func main() {
 	}
 	repository := taskrepository.NewSqliteTaskRepository(db)
 
-	pages := []tea.Model{ui.NewApp(repository), ui.NewForm(repository)}
-	app := pages[ui.Board]
+	app := ui.NewApp(repository)
 
 	p := tea.NewProgram(app)
 

@@ -12,20 +12,20 @@ import (
 
 type status int
 
-var pages []tea.Model
-
 const (
 	Board status = iota
 	TaskForm
 )
 
 type App struct {
-	focused       models.Status
-	task          taskrepository.TaskRepository
-	list          list.Model
-	loaded        bool
-	quitting      bool
+	task     taskrepository.TaskRepository
+	list     list.Model
+	form     *Form
+	loaded   bool
+	quitting bool
+
 	currentParent *uint
+	currentView   status
 	breadcrumb    []breadcrumbItem
 }
 
@@ -44,6 +44,7 @@ func (m App) Init() tea.Cmd {
 
 func (m *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+
 	case tea.WindowSizeMsg:
 		if !m.loaded {
 			focusedStyle.Width(msg.Width / divisor)
@@ -51,6 +52,16 @@ func (m *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.initList(msg.Width, msg.Height)
 			m.loaded = true
 		}
+	case TaskCreatedMsg:
+		m.currentView = Board
+		m.loadTasksForCurrentLevel()
+		return m, nil
+	case TaskDeletedMsg: // Task was deleted
+		m.loadTasksForCurrentLevel() // Reload the list
+		return m, nil
+	case TaskCancelledMsg: // User cancelled form
+		m.currentView = Board
+		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
@@ -65,9 +76,28 @@ func (m *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "h", "backspace":
 			m.navigateBack()
 		case "n":
-			pages[Board] = m
-			return pages[TaskForm].Update(nil)
+			selectedItem := m.list.SelectedItem()
+			var parentID *uint
+			if selectedItem != nil {
+				task := selectedItem.(models.UITask)
+				parentID = &task.ID
+			}
+			m.form = NewForm(m.task, parentID) // Pass parentID
+			m.currentView = TaskForm
+			return m, m.form.Init()
+
+		case "d":
+
+			selectedItem := m.list.SelectedItem()
+			task := selectedItem.(models.UITask)
+			if selectedItem != nil {
+				return m, func() tea.Msg { return m.deleteTask(task.ID) }
+			}
 		}
+	}
+	if m.currentView == TaskForm {
+		_, cmd := m.form.Update(msg)
+		return m, cmd
 	}
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
@@ -75,6 +105,9 @@ func (m *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m App) View() string {
+	if m.currentView == TaskForm {
+		return m.form.View()
+	}
 	if m.quitting {
 		return ""
 	}
