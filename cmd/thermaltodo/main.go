@@ -1,15 +1,14 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
-	"time"
+	"os"
 
 	"github.com/FerrarioDev/thermaltodo/internal/database"
-	"github.com/FerrarioDev/thermaltodo/internal/models"
-	"github.com/FerrarioDev/thermaltodo/internal/printer"
 	taskrepository "github.com/FerrarioDev/thermaltodo/internal/repository/task"
+	"github.com/FerrarioDev/thermaltodo/internal/ui"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
@@ -18,26 +17,13 @@ func main() {
 		log.Fatal(err)
 	}
 	repository := taskrepository.NewSqliteTaskRepository(db)
-	ctx := context.Background()
-	tasks, err := repository.GetAll(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	p, bc := printer.Connect()
+	app := ui.NewApp(repository)
 
-	printer := printer.NewEscPos(p, bc)
+	p := tea.NewProgram(app)
 
-	job := models.PrintJob{
-		TaskID:      1,
-		Title:       "text",
-		Description: "desc",
-		Priority:    "1",
-		CreatedAt:   time.Now(),
-	}
-	printer.Print(ctx, &job)
-
-	for i, task := range tasks {
-		fmt.Printf("task %d: %v", i, task)
+	if _, err := p.Run(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }
