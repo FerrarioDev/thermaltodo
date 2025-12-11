@@ -12,6 +12,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// Form model definition used for creating new taks
 type Form struct {
 	title       textinput.Model
 	description textarea.Model
@@ -19,11 +20,7 @@ type Form struct {
 	repo        taskrepository.TaskRepository
 }
 
-type TaskCreatedMsg struct {
-	Task models.Task
-}
-
-type TaskCancelledMsg struct{}
+/* Initializer */
 
 func NewForm(repo taskrepository.TaskRepository, parentID *uint) *Form {
 	form := &Form{
@@ -36,6 +33,7 @@ func NewForm(repo taskrepository.TaskRepository, parentID *uint) *Form {
 	return form
 }
 
+// NewTask Creates a new task in the database and returns the task in a tea.Msg
 func (m Form) NewTask() tea.Msg {
 	task := models.Task{
 		Title:       m.title.Value(),
@@ -59,8 +57,12 @@ func (m *Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
+
+		// Cancels the task creation
 		case "ctrl+c", "esc":
 			return m, func() tea.Msg { return TaskCancelledMsg{} }
+
+		// Switch betwenn fields
 		case "tab":
 			if m.title.Focused() {
 				m.title.Blur()
@@ -71,6 +73,8 @@ func (m *Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.title.Focus()
 				return m, textinput.Blink
 			}
+
+		// Switch fields and if is at the bottom field it creates the new task
 		case "enter":
 			if m.title.Focused() {
 				m.title.Blur()

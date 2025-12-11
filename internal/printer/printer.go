@@ -14,5 +14,6 @@ type Printer interface {
 type Queue interface {
 	Enqueue(job models.PrintJob) error
 	Worker(ctx context.Context)
+	Start(ctx context.Context, workers int)
 	Shutdown()
 }

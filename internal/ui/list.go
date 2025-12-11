@@ -12,8 +12,9 @@ import (
 
 const divisor = 4
 
-//	columnStyle = lipgloss.NewStyle().
-//			Padding(1, 2)
+// columnStyle = lipgloss.NewStyle().
+//
+//	Padding(1, 2)
 var focusedStyle = lipgloss.NewStyle().
 	Padding(1, 2).
 	Border(lipgloss.RoundedBorder()).
@@ -36,12 +37,8 @@ func (m *App) initList(width, height int) {
 
 func (m *App) loadTasksForCurrentLevel() {
 	var tasks []models.Task
-	if m.currentParent == nil {
-		// Load root tasks
-		tasks, _ = m.task.GetByParentID(context.Background(), nil)
-	} else {
-		tasks, _ = m.task.GetByParentID(context.Background(), m.currentParent)
-	}
+
+	tasks, _ = m.task.GetByParentID(context.Background(), m.currentParent)
 
 	items := make([]list.Item, len(tasks))
 	for i, task := range tasks {
@@ -55,8 +52,8 @@ func (m *App) loadTasksForCurrentLevel() {
 }
 
 func (m *App) navigateToChildren(task models.UITask) {
-	children, err := m.task.GetByParentID(context.Background(), &task.ID)
-	if err != nil || len(children) == 0 {
+	_, err := m.task.GetByParentID(context.Background(), &task.ID)
+	if err != nil {
 		return
 	}
 

@@ -34,11 +34,14 @@ func (r *SqliteTaskRepository) Create(ctx context.Context, task *models.Task) (u
 	//  return 0, err
 	//  }
 
-	if err := r.db.WithContext(ctx).First(&models.Task{}, task.ParentID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return 0, errors.New("parent not found")
+	// Only validate parent exists if ParentID is not nil
+	if task.ParentID != nil {
+		if err := r.db.WithContext(ctx).First(&models.Task{}, task.ParentID).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return 0, errors.New("parent not found")
+			}
+			return 0, err
 		}
-		return 0, err
 	}
 
 	result := r.db.WithContext(ctx).Create(task)
