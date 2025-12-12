@@ -32,6 +32,12 @@ func (s *EscPos) Print(ctx context.Context, job *models.PrintJob) error {
 	createdAt := job.CreatedAt.Format("2006-01-02 15:04:05")
 	receipt := `
 ================================
+   ________  ________  ________ 
+  /        \/        \/    /   \
+ /-        /         /         /
+/        _/        _/         / 
+\________/\________/\__/_____/  
+================================
   TASK: [%d]
 ================================
 
@@ -42,7 +48,6 @@ Description:
   %s
 
 --------------------------------
-Project: %s
 Created: %s
 Status: PENDING
 --------------------------------
@@ -52,7 +57,7 @@ Crumple & toss when complete!
 ================================
 --------------------------------
     `
-	if err := s.printer.Printf(receipt, job.TaskID, job.Title, job.Description, job.Project, createdAt); err != nil {
+	if err := s.printer.Printf(receipt, job.TaskID, job.Title, job.Description, createdAt); err != nil {
 		return fmt.Errorf("failed to print task: %v", err)
 	}
 

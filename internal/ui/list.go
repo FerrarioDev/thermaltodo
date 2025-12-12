@@ -20,10 +20,6 @@ var focusedStyle = lipgloss.NewStyle().
 	Border(lipgloss.RoundedBorder()).
 	BorderForeground(lipgloss.Color("62"))
 
-type TaskDeletedMsg struct {
-	TaskID uint
-}
-
 func (m *App) initList(width, height int) {
 	defaultList := list.New([]list.Item{}, list.NewDefaultDelegate(), width, height)
 	defaultList.Title = "Root Tasks"
@@ -108,4 +104,60 @@ func (m App) deleteTask(taskID uint) tea.Msg {
 		return fmt.Errorf("failed to delete task: %w", err)
 	}
 	return TaskDeletedMsg{TaskID: taskID}
+}
+
+func (m App) printTask(selectedItem models.UITask) tea.Msg {
+	task, err := m.task.GetByID(context.Background(), selectedItem.ID)
+	if err != nil {
+		fmt.Printf("failed to get task: %v", err)
+	}
+
+	job := models.PrintJob{
+		TaskID:      task.ID,
+		Title:       task.Title,
+		Description: task.Description,
+		CreatedAt:   task.CreatedAt,
+	}
+
+	if err := m.queue.Enqueue(job); err != nil {
+		fmt.Printf("failed to enqueue: %v", err)
+	}
+	return TaskPrintedMsg{Task: *task}
+}
+
+func (m App) getAllDescendants(parentID *uint) []models.Task {
+	tasks, err := m.task.GetByParentID(context.Background(), parentID)
+	if err != nil {
+		fmt.Printf("failed to get tasks: %v", err)
+		return []models.Task{}
+	}
+
+	var allTasks []models.Task
+	for _, task := range tasks {
+		allTasks = append(allTasks, task)
+		// Recursively get descendants of this task
+		descendants := m.getAllDescendants(&task.ID)
+		allTasks = append(allTasks, descendants...)
+	}
+
+	return allTasks
+}
+
+func (m App) printChildrens(parentID uint) tea.Msg {
+	// Get all descendants (children, grandchildren, etc.)
+	allTasks := m.getAllDescendants(&parentID)
+
+	for _, task := range allTasks {
+		job := models.PrintJob{
+			TaskID:      task.ID,
+			Title:       task.Title,
+			Description: task.Description,
+			CreatedAt:   task.CreatedAt,
+		}
+		if err := m.queue.Enqueue(job); err != nil {
+			fmt.Printf("failed to enqueue job: %v", err)
+		}
+	}
+
+	return TaskChildrenPrintedMsg{ParentID: parentID}
 }

@@ -2,7 +2,6 @@
 package ui
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/FerrarioDev/thermaltodo/internal/models"
@@ -120,21 +119,10 @@ func (m *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "p":
 			selectedItem := m.list.SelectedItem().(models.UITask)
-
-			task, err := m.task.GetByID(context.Background(), selectedItem.ID)
-			if err != nil {
-				fmt.Printf("failed to get task: %v", err)
-			}
-
-			job := models.PrintJob{
-				TaskID:      task.ID,
-				Title:       task.Title,
-				Description: task.Description,
-				CreatedAt:   task.CreatedAt,
-			}
-
-			if err := m.queue.Enqueue(job); err != nil {
-				fmt.Printf("failed to enqueue: %v", err)
+			return m, func() tea.Msg { return m.printTask(selectedItem) }
+		case "P":
+			if m.currentParent != nil {
+				return m, func() tea.Msg { return m.printChildrens(*m.currentParent) }
 			}
 		}
 	}
