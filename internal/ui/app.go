@@ -70,14 +70,23 @@ func (m *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case TaskDeletedMsg: // Task was deleted
 		m.loadTasksForCurrentLevel()
 		return m, nil
+	case TaskCompletedMsg:
+		m.loadTasksForCurrentLevel()
+		return m, nil
 	case TaskCancelledMsg: // User cancelled task
 		m.currentView = Board
+		return m, nil
+	case TaskPrintedMsg:
+		m.loadTasksForCurrentLevel()
+		return m, nil
+	case TaskChildrenPrintedMsg:
+		m.loadTasksForCurrentLevel()
 		return m, nil
 
 	// quit handler
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "q":
+		case "ctrl+c":
 			m.quitting = true
 			return m, tea.Quit
 		}
@@ -117,6 +126,7 @@ func (m *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				task := selectedItem.(models.UITask)
 				return m, func() tea.Msg { return m.deleteTask(task.ID) }
 			}
+
 		case "p":
 			selectedItem := m.list.SelectedItem().(models.UITask)
 			return m, func() tea.Msg { return m.printTask(selectedItem) }
@@ -124,6 +134,13 @@ func (m *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.currentParent != nil {
 				return m, func() tea.Msg { return m.printChildrens(*m.currentParent) }
 			}
+
+		case "c":
+			selectedItem := m.list.SelectedItem().(models.UITask)
+			return m, func() tea.Msg { return m.completeTask(selectedItem.ID) }
+		case "ctrl+c", "q":
+			m.quitting = true
+			return m, tea.Quit
 		}
 	}
 	var cmd tea.Cmd

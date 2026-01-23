@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/FerrarioDev/thermaltodo/internal/database"
 	"github.com/FerrarioDev/thermaltodo/internal/printer"
@@ -14,7 +15,11 @@ import (
 )
 
 func main() {
-	db, err := database.InitDB("thermaltodo.db")
+	dbPath := filepath.Join(os.Getenv("HOME"), ".thermaltodo", "thermaltodo.db")
+	if err := os.MkdirAll(filepath.Dir(dbPath), 0o755); err != nil {
+		fmt.Println("failed to create db")
+	}
+	db, err := database.InitDB(dbPath)
 	if err != nil {
 		log.Fatal(err)
 	}

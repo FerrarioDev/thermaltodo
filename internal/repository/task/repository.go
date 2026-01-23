@@ -12,7 +12,7 @@ type TaskRepository interface {
 	GetByID(ctx context.Context, id uint) (*models.Task, error)
 	GetAll(ctx context.Context) ([]models.Task, error)
 	// GetByProject(ctx context.Context, projectID uint) ([]models.Task, error)
-	GetByParentID(ctx context.Context, parentID *uint) ([]models.Task, error)
+	GetByParentID(ctx context.Context, parentID *uint, status models.Status) ([]models.Task, error)
 	GetPending(ctx context.Context) ([]models.Task, error)
 	GetForPrinting(ctx context.Context) ([]models.Task, error)
 	Update(ctx context.Context, task *models.Task) error

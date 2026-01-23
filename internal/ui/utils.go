@@ -14,6 +14,10 @@ type TaskChildrenPrintedMsg struct {
 	ParentID uint
 }
 
+type TaskCompletedMsg struct {
+	id uint
+}
+
 type TaskCancelledMsg struct{}
 
 type TaskDeletedMsg struct {

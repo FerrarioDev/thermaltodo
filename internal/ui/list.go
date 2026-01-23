@@ -34,7 +34,7 @@ func (m *App) initList(width, height int) {
 func (m *App) loadTasksForCurrentLevel() {
 	var tasks []models.Task
 
-	tasks, _ = m.task.GetByParentID(context.Background(), m.currentParent)
+	tasks, _ = m.task.GetByParentID(context.Background(), m.currentParent, models.Todo)
 
 	items := make([]list.Item, len(tasks))
 	for i, task := range tasks {
@@ -48,7 +48,7 @@ func (m *App) loadTasksForCurrentLevel() {
 }
 
 func (m *App) navigateToChildren(task models.UITask) {
-	_, err := m.task.GetByParentID(context.Background(), &task.ID)
+	_, err := m.task.GetByParentID(context.Background(), &task.ID, models.Todo)
 	if err != nil {
 		return
 	}
@@ -107,7 +107,8 @@ func (m App) deleteTask(taskID uint) tea.Msg {
 }
 
 func (m App) printTask(selectedItem models.UITask) tea.Msg {
-	task, err := m.task.GetByID(context.Background(), selectedItem.ID)
+	ctx := context.Background()
+	task, err := m.task.GetByID(ctx, selectedItem.ID)
 	if err != nil {
 		fmt.Printf("failed to get task: %v", err)
 	}
@@ -122,11 +123,12 @@ func (m App) printTask(selectedItem models.UITask) tea.Msg {
 	if err := m.queue.Enqueue(job); err != nil {
 		fmt.Printf("failed to enqueue: %v", err)
 	}
+
 	return TaskPrintedMsg{Task: *task}
 }
 
 func (m App) getAllDescendants(parentID *uint) []models.Task {
-	tasks, err := m.task.GetByParentID(context.Background(), parentID)
+	tasks, err := m.task.GetByParentID(context.Background(), parentID, models.Todo)
 	if err != nil {
 		fmt.Printf("failed to get tasks: %v", err)
 		return []models.Task{}
@@ -160,4 +162,12 @@ func (m App) printChildrens(parentID uint) tea.Msg {
 	}
 
 	return TaskChildrenPrintedMsg{ParentID: parentID}
+}
+
+func (m App) completeTask(id uint) tea.Msg {
+	if err := m.task.MarkComplete(context.Background(), id); err != nil {
+		fmt.Printf("failed to MarkComplete")
+	}
+
+	return TaskCompletedMsg{id}
 }

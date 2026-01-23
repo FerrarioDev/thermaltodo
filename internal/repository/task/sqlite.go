@@ -74,7 +74,7 @@ func (r *SqliteTaskRepository) GetAll(ctx context.Context) ([]models.Task, error
 	return tasks, nil
 }
 
-func (r *SqliteTaskRepository) GetByParentID(ctx context.Context, parentID *uint) ([]models.Task, error) {
+func (r *SqliteTaskRepository) GetByParentID(ctx context.Context, parentID *uint, status models.Status) ([]models.Task, error) {
 	ctx, cancel := context.WithTimeout(ctx, timeout*time.Second)
 	defer cancel()
 
@@ -87,7 +87,7 @@ func (r *SqliteTaskRepository) GetByParentID(ctx context.Context, parentID *uint
 	} else {
 		query = query.Where("parent_id = ?", parentID)
 	}
-
+	query = query.Where("status = ?", status)
 	err := query.Find(&tasks).Error
 
 	return tasks, err
@@ -129,6 +129,19 @@ func (r *SqliteTaskRepository) GetForPrinting(ctx context.Context) ([]models.Tas
 func (r *SqliteTaskRepository) Delete(ctx context.Context, id uint) error {
 	ctx, cancel := context.WithTimeout(ctx, timeout*time.Second)
 	defer cancel()
+
+	tasks, err := r.GetByParentID(ctx, &id, models.Todo)
+	if err != nil {
+		return err
+	}
+	if len(tasks) > 0 {
+		for _, task := range tasks {
+			if err := r.Delete(ctx, task.ID); err != nil {
+				return err
+			}
+		}
+	}
+
 	result := r.db.WithContext(ctx).Delete(&models.Task{}, id)
 	if result.Error != nil {
 		return result.Error
